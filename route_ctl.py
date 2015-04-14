@@ -31,8 +31,17 @@ else:
     user = opts.user
 pw = opts.pw
 
-a = Core(host)
-a.login(user, pw)
+try:
+    a = Core(host)
+except:
+    print "Can't connect. Check your connection."
+    sys.exit()
+
+try:
+    a.login(user, pw)
+except:
+    print "Unable to log in. Check your credentials."
+    sys.exit()
 
 # Simple connection tester to make sure you can hit the API
 
@@ -41,8 +50,7 @@ def check_api():
         z = a.response_handler(a.talk(["/system/resource/print"]))
         return z
     except:
-        print 'Unable to connect properly.\n \
-                Kiling myself.'
+        print 'Unable to connect properly.\nKilling myself.'
         sys.exit()
 
 def data_printer(data):
