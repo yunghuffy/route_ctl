@@ -65,11 +65,13 @@ def check_api():
         print 'Unable to connect properly.\nKilling myself.'
         sys.exit()
 
+# A pretty way to print output
 def data_printer(data):
     for i in data:
         for j in i.keys():
             print "%s: %s" % (j, i[j])
 
+# We need to get the route id in order to make changes to it
 def get_route_id(ip):
     try:
         z = a.response_handler(a.talk(["/ip/route/print", "?=dst-address=" + ip]))
@@ -79,15 +81,24 @@ def get_route_id(ip):
         sys.exit()
     return route_id
 
+# Issues enable to the device for all routes
 def enable_routes(routes):
     for route in routes:
         i = get_route_id(route)
         x = a.response_handler(a.talk(["/ip/route/enable", "=.id" + i]))
 
+# Issues disable to the device for all routes
 def disable_routes(routes):
     for route in route:
         i = get_route_id(route)
         x = a.response_handler(a.talk(["/ip/route/disable", "=.id" + i]))
 
 if __name__ == "__main__":
-    data_printer(check_api())
+    if opt.enable:
+        print "Enabling the following routes: %s" % (opts.all_routes)
+        enable_routes(routes)
+    elif opt.disable:
+        print "Disabling the following routes: %s" % (opts.all_routes)
+        disable_routes(routes)
+    else:
+        check_api()
