@@ -27,6 +27,13 @@ parser.add_option("-d", "--disable",
 parser.add_option("-e", "--enable",
                 action="store_true", dest="enable",
                 help="enable routes")
+parser.add_option("-6", "--ipv6-default",
+                action="store", dest="ipv6",
+                help="Add the default IPv6 route to disable/enable")
+parser.add_option("-4", "--ipv4-default",
+                action="store", dest="ipv4",
+                help="Add the default IPv4 route to disable/enable")
+
 
 (opts, args) = parser.parse_args()
 if not opts.host:
@@ -40,8 +47,16 @@ else:
     user = opts.user
 pw = opts.pw
 
+routes = []
 if opts.all_routes:
-    routes = opts.all_routes.split(",")
+    for i in opts.all_routes.split(","):
+        routes.append(i)
+
+if opts.ipv4:
+    routes.append(opts.ipv4)
+
+if opts.ipv6:
+    routes.append(opts.ipv6)
 
 try:
     a = Core(host)
