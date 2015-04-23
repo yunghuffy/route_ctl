@@ -89,12 +89,12 @@ def data_printer(data):
 # We need to get the route id in order to make changes to it
 def get_route_id(ip):
     try:
-        z = a.response_handler(a.talk(["/routing/bgp/instance/print", "?=dst-address=" + ip]))
+        z = a.response_handler(a.talk(["/routing/bgp/instance/print", "?=router-id=" + ip]))
         f = z[0]['.id']
         route_id = f.strip('*')
+        return route_id
     except:
         print "Route %s not found." % ip
-    return route_id
 
 # Issues enable to the device for all routes
 def enable_routes(routes):
@@ -105,7 +105,7 @@ def enable_routes(routes):
 
 # Issues disable to the device for all routes
 def disable_routes(routes):
-    for route in route:
+    for route in routes:
         i = get_route_id(route)
         x = a.response_handler(a.talk(["/routing/bgp/instance/disable", "=.id" + i]))
         print "Route %s disabled" % route
