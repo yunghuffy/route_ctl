@@ -116,4 +116,4 @@ if __name__ == "__main__":
         print "Disabling the following routes: %s" % (opts.all_routes)
         disable_routes(routes)
     else:
-        check_api()
+        data_printer(check_api())
