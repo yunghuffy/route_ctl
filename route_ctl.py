@@ -107,7 +107,7 @@ def enable_routes(routes):
 def disable_routes(routes):
     for route in routes:
         i = get_route_id(route)
-        x = a.response_handler(a.talk(["/routing/bgp/instance/disable", "=.id" + i]))
+        x = a.response_handler(a.talk(["/routing/bgp/instance/disable", "=.id=" + i]))
         print "Route %s disabled" % route
 
 if __name__ == "__main__":
