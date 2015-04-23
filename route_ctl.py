@@ -109,10 +109,10 @@ def disable_routes(routes):
         x = a.response_handler(a.talk(["/ip/route/disable", "=.id" + i]))
 
 if __name__ == "__main__":
-    if opt.enable:
+    if opts.enable:
         print "Enabling the following routes: %s" % (opts.all_routes)
         enable_routes(routes)
-    elif opt.disable:
+    elif opts.disable:
         print "Disabling the following routes: %s" % (opts.all_routes)
         disable_routes(routes)
     else:
