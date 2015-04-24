@@ -121,7 +121,7 @@ def get_route_id(ip):
     try:
         z = a.response_handler(a.talk(["/ip/route/print", "?=dst-address=" + ip]))
         f = z[0]['.id']
-        route_id = f.strip('*')
+        route_id = f
         return route_id
     except:
         print "Route %s not found." % ip
@@ -131,7 +131,7 @@ def get_ipv6_route_id(ip):
     try:
         z = a.response_handler(a.talk(["/ipv6/route/print", "?=dst-address=" + ip]))
         f = z[0]['.id']
-        route_id = f.strip('*')
+        route_id = f
         return route_id
     except:
         print "Route %s not found." % ip
@@ -145,13 +145,13 @@ def enable_routes(routes, gateway):
 # Issues enable to the device for ipv6 routes
 def enable_ipv6_routes(routes, gateway):
     for route in routes:
-        x = a.response_handler(a.talk(["/ipv6/route/add", "=dst-address=" + route, "=gateway=" + gw]))
-        print "Route %s enabled" % route
+        x = a.response_handler(a.talk(["/ipv6/route/add", "=dst-address=" + route, "=gateway=" + ipv6_gw]))
+        print "IPv6 route %s enabled" % route
 
 # Issues disable to the device for all routes
 def disable_routes(routes):
     for route in routes:
-        i = get_ipv6_route_id(route)
+        i = get_route_id(route)
         x = a.response_handler(a.talk(["/ip/route/remove", "=.id=" + i]))
         print "Route %s disabled" % route
 
@@ -160,7 +160,7 @@ def disable_ipv6_routes(routes):
     for route in routes:
         i = get_ipv6_route_id(route)
         x = a.response_handler(a.talk(["/ipv6/route/remove", "=.id=" + i]))
-        print "Route %s disabled" % route
+        print "IPv6 route %s disabled" % route
 
 if __name__ == "__main__":
     if opts.enable:
@@ -176,12 +176,12 @@ if __name__ == "__main__":
     elif opts.disable:
         print "Disabling the following routes: %s" % (opts.all_routes)
         if len(ipv6_routes) > 0 and len(routes) > 0:
-            disable_ipv6_routes(ipv6_routes, ipv6_gw)
-            disable_routes(routes, gw)
+            disable_ipv6_routes(ipv6_routes)
+            disable_routes(routes)
         elif len(ipv6_routes) > 0 and not len(routes) > 0:
-            disable_ipv6_routes(ipv6_routes, ipv6_gw)
+            disable_ipv6_routes(ipv6_routes)
         else:
-            disable_routes(routes, gw)
+            disable_routes(routes)
     
     else:
         data_printer(check_api())
