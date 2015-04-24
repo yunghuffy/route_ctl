@@ -33,31 +33,62 @@ parser.add_option("-6", "--ipv6-default",
 parser.add_option("-4", "--ipv4-default",
                 action="store", dest="ipv4",
                 help="Add the default IPv4 route to disable/enable")
-
+parser.add_option("-g", "--gateway",
+                action="store", dest="gw",
+                help="a gateway for routes to add")
+parser.add_option("-a", "--ipvg-gateway",
+                action="store", dest="ipv6_gw",
+                help="Set the IPv6 gateway")
 
 (opts, args) = parser.parse_args()
+
+# Require a hostname
 if not opts.host:
     parser.error("No hostname provided")
 else:
     host = opts.host
 
+# Require a user
 if not opts.user:
     parser.error("User not provided")
 else:
     user = opts.user
+
+# Set the gateway if not given on 'enable'
+if opts.enable and not opts.gw:
+    gw = "127.0.0.1"
+else:
+    gw = opts.gw
+
+if opts.enable and not opts.ipv6_gw:
+    ipv6_gw = "2001:dead:beef::1"
+else:
+    ipv6_gw = opts.ipv6_gw
+
+# Password store
 pw = opts.pw
 
+# Routes list
 routes = []
+
+# IPv6 routes list
+ipv6_routes = []
+
+# Simple parser to sort the addresses
 if opts.all_routes:
     for i in opts.all_routes.split(","):
-        routes.append(i)
+        if ":" in i:
+            ipv6_routes.append(i)
+        else:
+            routes.append(i)
 
 if opts.ipv4:
-    routes.append(opts.ipv4)
+    routes.append("0.0.0.0")
 
 if opts.ipv6:
-    routes.append(opts.ipv6)
+    ipv6_routes.append("::0")
 
+# Instantiating the session and loggin in
 try:
     a = Core(host)
 except:
@@ -71,7 +102,6 @@ except:
     sys.exit()
 
 # Simple connection tester to make sure you can hit the API
-
 def check_api():
     try:
         z = a.response_handler(a.talk(["/system/resource/print"]))
@@ -89,33 +119,69 @@ def data_printer(data):
 # We need to get the route id in order to make changes to it
 def get_route_id(ip):
     try:
-        z = a.response_handler(a.talk(["/routing/bgp/instance/print", "?=router-id=" + ip]))
+        z = a.response_handler(a.talk(["/ip/route/print", "?=dst-address=" + ip]))
         f = z[0]['.id']
         route_id = f.strip('*')
         return route_id
     except:
         print "Route %s not found." % ip
 
-# Issues enable to the device for all routes
-def enable_routes(routes):
+# We need to get the route id in order to make changes to it
+def get_ipv6_route_id(ip):
+    try:
+        z = a.response_handler(a.talk(["/ipv6/route/print", "?=dst-address=" + ip]))
+        f = z[0]['.id']
+        route_id = f.strip('*')
+        return route_id
+    except:
+        print "Route %s not found." % ip
+
+# Issues enable to the device for ipv4 routes
+def enable_routes(routes, gateway):
     for route in routes:
-        i = get_route_id(route)
-        x = a.response_handler(a.talk(["/routing/bgp/instance/enable", "=.id=" + i]))
+        x = a.response_handler(a.talk(["/ip/route/add", "=dst-address=" + route, "=gateway=" + gw]))
+        print "Route %s enabled" % route
+
+# Issues enable to the device for ipv6 routes
+def enable_ipv6_routes(routes, gateway):
+    for route in routes:
+        x = a.response_handler(a.talk(["/ipv6/route/add", "=dst-address=" + route, "=gateway=" + gw]))
         print "Route %s enabled" % route
 
 # Issues disable to the device for all routes
 def disable_routes(routes):
     for route in routes:
-        i = get_route_id(route)
-        x = a.response_handler(a.talk(["/routing/bgp/instance/disable", "=.id=" + i]))
+        i = get_ipv6_route_id(route)
+        x = a.response_handler(a.talk(["/ip/route/remove", "=.id=" + i]))
+        print "Route %s disabled" % route
+
+# Issues disable to the device for all routes
+def disable_ipv6_routes(routes):
+    for route in routes:
+        i = get_ipv6_route_id(route)
+        x = a.response_handler(a.talk(["/ipv6/route/remove", "=.id=" + i]))
         print "Route %s disabled" % route
 
 if __name__ == "__main__":
     if opts.enable:
         print "Enabling the following routes: %s" % (opts.all_routes)
-        enable_routes(routes)
+        if len(ipv6_routes) > 0 and len(routes) > 0:
+            enable_ipv6_routes(ipv6_routes, ipv6_gw)
+            enable_routes(routes, gw)
+        elif len(ipv6_routes) > 0 and not len(routes) > 0:
+            enable_ipv6_routes(ipv6_routes, ipv6_gw)
+        else:
+            enable_routes(routes, gw)
+    
     elif opts.disable:
         print "Disabling the following routes: %s" % (opts.all_routes)
-        disable_routes(routes)
+        if len(ipv6_routes) > 0 and len(routes) > 0:
+            disable_ipv6_routes(ipv6_routes, ipv6_gw)
+            disable_routes(routes, gw)
+        elif len(ipv6_routes) > 0 and not len(routes) > 0:
+            disable_ipv6_routes(ipv6_routes, ipv6_gw)
+        else:
+            disable_routes(routes, gw)
+    
     else:
         data_printer(check_api())
